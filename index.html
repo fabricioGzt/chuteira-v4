@@ -86,6 +86,34 @@
             text-decoration: line-through;
             opacity: 0.6;
         }
+
+        #ball {
+            font-size: 100px;
+            animation: kick 1s ease forwards;
+        }
+
+        @keyframes kick {
+            0% {
+                transform: translateX(-300px) scale(1);
+            }
+
+            50% {
+                transform: scale(1.4) rotate(180deg);
+            }
+
+            100% {
+                transform: translateX(0) rotate(360deg);
+            }
+        }
+
+        #goalAnimation h1 {
+            color: #22c55e;
+            font-size: 28px;
+        }
+
+        #goalAnimation h2 {
+            font-size: 20px;
+        }
     </style>
 
 </head>
@@ -127,6 +155,39 @@
         </div>
 
         <div class="log" id="log"></div>
+    </div>
+
+    <canvas id="fireworks" style="
+        position:fixed;
+        top:0;
+        left:0;
+        width:100%;
+        height:100%;
+        pointer-events:none;
+        z-index:9998;
+        "></canvas>
+
+    <audio id="goalSound" src="gol.mp3"></audio>
+
+    <div id="goalAnimation" style="
+        display:none;
+        position:fixed;
+        top:0;
+        left:0;
+        width:100%;
+        height:100%;
+        background:rgba(0,0,0,0.9);
+        z-index:9999;
+        justify-content:center;
+        align-items:center;
+        flex-direction:column;
+        ">
+
+        <div id="ball">⚽</div>
+
+        <h1>⚽ GOL DO DIA!</h1>
+        <h2>🔥 Bora pra cima!</h2>
+
     </div>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
@@ -266,8 +327,10 @@
 
         // MISSÕES
         function loadMissions() {
+
             let today = new Date().toDateString();
             let saved = localStorage.getItem("missionDate");
+            localStorage.removeItem("goalShown");
 
             if (saved !== today) {
                 localStorage.setItem("missionDate", today);
@@ -310,7 +373,80 @@
                 update();
                 loadMissions();
                 saveCloud();
+
+                checkAllDone();
             }
+        }
+
+        //checar missão
+
+        function checkAllDone() {
+            let missions = JSON.parse(localStorage.getItem("missions"));
+
+            let allDone = missions.every(m => m.done >= m.max);
+
+            if (allDone && !localStorage.getItem("goalShown")) {
+                showGoalAnimation();
+                localStorage.setItem("goalShown", "true");
+            }
+        }
+
+        function showGoalAnimation() {
+            let screen = document.getElementById("goalAnimation");
+            let sound = document.getElementById("goalSound");
+
+            screen.style.display = "flex";
+
+            sound.currentTime = 0;
+            sound.play();
+
+            startFireworks();
+
+            setTimeout(() => {
+                screen.style.display = "none";
+            }, 4000);
+        }
+
+        function startFireworks() {
+            const canvas = document.getElementById("fireworks");
+            const ctx = canvas.getContext("2d");
+
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            let particles = [];
+
+            function createFirework() {
+                for (let i = 0; i < 50; i++) {
+                    particles.push({
+                        x: canvas.width / 2,
+                        y: canvas.height / 2,
+                        speedX: (Math.random() - 0.5) * 10,
+                        speedY: (Math.random() - 0.5) * 10,
+                        life: 60
+                    });
+                }
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                particles.forEach((p, i) => {
+                    p.x += p.speedX;
+                    p.y += p.speedY;
+                    p.life--;
+
+                    ctx.fillStyle = "lime";
+                    ctx.fillRect(p.x, p.y, 3, 3);
+
+                    if (p.life <= 0) particles.splice(i, 1);
+                });
+
+                requestAnimationFrame(animate);
+            }
+
+            createFirework();
+            animate();
         }
 
         // NOTIFICAÇÕES
@@ -346,7 +482,7 @@
                 document.getElementById("avatar").src = img;
                 localStorage.setItem("avatar", img);
 
-                saveCloud(); 
+                saveCloud();
             }
 
             reader.readAsDataURL(event.target.files[0]);
@@ -399,7 +535,7 @@
 
         // SERVICE WORKER
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('service-worker.js?v=4');
+            navigator.serviceWorker.register('service-worker.js?v=5');
         }
     </script>
 </body>

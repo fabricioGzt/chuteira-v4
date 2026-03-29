@@ -118,10 +118,12 @@
 
         <div class="log" id="log"></div>
     </div>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
     <script>
+
+        let adminUnlocked = false;
 
         const firebaseConfig = {
             apiKey: "AIzaSyAWgsHnLAUopuadUDmCVqjQEPwace0fiSU",
@@ -151,8 +153,6 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        let adminUnlocked = false;
-
         function admin() {
             let senha = prompt("Senha do Tio:");
             if (senha === "382648") {
@@ -165,8 +165,12 @@
             }
         }
 
-        let name = localStorage.getItem("name") || prompt("Nome do jogador:");
-        localStorage.setItem("name", name);
+        let name = localStorage.getItem("name");
+
+        if (!name || name === "null") {
+            name = prompt("Nome do jogador:");
+            localStorage.setItem("name", name);
+        }
 
         let points = parseInt(localStorage.getItem("points") || 800);
         const goal = 1000;

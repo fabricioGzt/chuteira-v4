@@ -80,6 +80,11 @@
             border-radius: 8px;
             margin: 5px;
         }
+
+        .done {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
     </style>
 
 </head>
@@ -244,11 +249,11 @@
             if (saved !== today) {
                 localStorage.setItem("missionDate", today);
                 localStorage.setItem("missions", JSON.stringify([
-                    { txt: "🪥 Escovar os dentes", done: false },
-                    { txt: "🚿 Tomar banho", done: false },
-                    { txt: "🛏️ Arrumar a cama", done: false },
-                    { txt: "📚 Fazer tarefa", done: false },
-                    { txt: "🙂 Ser educado", done: false }
+                    { txt: "🪥 Escovar os dentes", done: 0, max: 3 },
+                    { txt: "🚿 Tomar banho", done: 0, max: 1 },
+                    { txt: "🛏️ Arrumar a cama", done: 0, max: 1 },
+                    { txt: "📚 Fazer tarefa", done: 0, max: 1 },
+                    { txt: "🙂 Ser educado", done: 0, max: 1 }
                 ]));
             }
 
@@ -256,10 +261,12 @@
             let html = "";
 
             missions.forEach((m, i) => {
-                html += `<div class="mission">
-            ${m.txt} 
-            <button onclick="completeMission(${i})">✔</button>
-        </div>`;
+                let doneClass = m.done >= m.max ? "done" : "";
+
+                html += `<div class="mission ${doneClass}">
+                ${m.txt} (${m.done}/${m.max})
+                <button onclick="completeMission(${i})">✔</button>
+                </div>`;
             });
 
             document.getElementById("missions").innerHTML = html;
@@ -267,15 +274,31 @@
 
         function completeMission(i) {
             let missions = JSON.parse(localStorage.getItem("missions"));
-            if (!missions[i].done) {
-                missions[i].done = true;
+
+            if (missions[i].done < missions[i].max) {
+                missions[i].done++;
                 points += 10;
+
                 log("+10 Missão: " + missions[i].txt);
+
                 localStorage.setItem("missions", JSON.stringify(missions));
+
                 update();
                 loadMissions();
+            } else {
+                alert("Já completou o máximo hoje 😄");
             }
         }
+        let missions = JSON.parse(localStorage.getItem("missions"));
+        if (!missions[i].done) {
+            missions[i].done = true;
+            points += 10;
+            log("+10 Missão: " + missions[i].txt);
+            localStorage.setItem("missions", JSON.stringify(missions));
+            update();
+            loadMissions();
+        }
+
 
         function notifyUser() {
             if (Notification.permission === "granted") {

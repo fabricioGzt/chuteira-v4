@@ -154,13 +154,13 @@
     <div class="container">
         <h1>⚽ Missão Chuteira</h1>
 
-        <div id="version">Versão 10</div>
+        <div id="version">Versão 12</div>
 
         <button id="installBtn" style="display:none; background:#22c55e;">
             📲 Instalar App
         </button>
 
-        <input id="fileInput" type="file" accept="image/*" onchange="loadAvatar(event)" style="display:block;">
+        <input id="fileInput" type="file" accept="image/*" onchange="loadAvatar(event)" style="display:none;">
         <br><br>
         <img id="avatar" width="100" style="border-radius:50%; cursor:pointer;" onclick="openAvatarModal()">
         <h3 id="name"></h3>
@@ -277,6 +277,7 @@ text-align:center;
 
     <script>
         let adminUnlocked = false;
+        const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 
         // FIREBASE
         const firebaseConfig = {
@@ -318,7 +319,7 @@ text-align:center;
 
         function loadCloud() {
 
-            
+
             name = name.trim().toLowerCase();
             localStorage.setItem("name", name);
 
@@ -336,6 +337,8 @@ text-align:center;
                     if (data.avatar) {
                         localStorage.setItem("avatar", data.avatar);
                         document.getElementById("avatar").src = data.avatar;
+                    } else {
+                        document.getElementById("avatar").src = DEFAULT_AVATAR;
                     }
 
                     if (data.logs) {
@@ -348,7 +351,7 @@ text-align:center;
                 }
 
                 loadMissions();
-                renderLogs(); 
+                renderLogs();
                 update();
 
             }).catch(err => {
@@ -663,9 +666,8 @@ text-align:center;
         window.onload = function () {
 
             let avatar = localStorage.getItem("avatar");
-            if (avatar) {
-                document.getElementById("avatar").src = avatar;
-            }
+
+            document.getElementById("avatar").src = avatar || DEFAULT_AVATAR;
 
             if (isIos() && !isInStandaloneMode()) {
                 alert("Para instalar o app:\n1. Compartilhar 📤\n2. 'Tela de Início'");
@@ -679,9 +681,7 @@ text-align:center;
 
         function openAvatarModal() {
             let img = localStorage.getItem("avatar");
-            if (img) {
-                document.getElementById("avatarBig").src = img;
-            }
+            document.getElementById("avatarBig").src = img || DEFAULT_AVATAR;
             document.getElementById("avatarModal").style.display = "flex";
         }
 
@@ -691,7 +691,7 @@ text-align:center;
 
         // SERVICE WORKER
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('service-worker.js?v=11');
+            navigator.serviceWorker.register('service-worker.js?v=12');
         }
     </script>
 </body>

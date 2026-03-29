@@ -160,14 +160,35 @@
 
         // CLOUD
         function saveCloud() {
-            db.collection("usuarios").doc(name).set({ pontos: points });
+            let missions = JSON.parse(localStorage.getItem("missions"));
+            let avatar = localStorage.getItem("avatar");
+
+            db.collection("usuarios").doc(name).set({
+                pontos: points,
+                missions: missions,
+                avatar: avatar
+            });
         }
 
         function loadCloud() {
             db.collection("usuarios").doc(name).get().then(doc => {
                 if (doc.exists) {
-                    points = doc.data().pontos;
+
+                    let data = doc.data();
+
+                    points = data.pontos || 0;
+
+                    if (data.missions) {
+                        localStorage.setItem("missions", JSON.stringify(data.missions));
+                    }
+
+                    if (data.avatar) {
+                        localStorage.setItem("avatar", data.avatar);
+                        document.getElementById("avatar").src = data.avatar;
+                    }
+
                     update();
+                    loadMissions();
                 }
             });
         }
@@ -177,7 +198,7 @@
             let senha = prompt("Senha do Tio:");
             if (senha === "382648") {
                 adminUnlocked = !adminUnlocked;
-                alert(adminUnlocked ? "Modo pai ATIVADO 🔓" : "Modo pai DESATIVADO 🔒");
+                alert(adminUnlocked ? "Modo Tio ATIVADO 🔓" : "Modo Tio DESATIVADO 🔒");
             }
         }
 
@@ -251,7 +272,7 @@
             if (saved !== today) {
                 localStorage.setItem("missionDate", today);
                 localStorage.setItem("missions", JSON.stringify([
-                    { txt: "🪥 Escovar os dentes", done: 0, max: 3 },
+                    { txt: " Escovar os dentes", done: 0, max: 3 },
                     { txt: "🚿 Tomar banho", done: 0, max: 1 },
                     { txt: "🛏️ Arrumar a cama", done: 0, max: 1 },
                     { txt: "📚 Fazer tarefa", done: 0, max: 1 },
@@ -288,10 +309,25 @@
 
                 update();
                 loadMissions();
-            } else {
-                alert("Já completou o máximo hoje 😄");
+                saveCloud();
             }
         }
+        let missions = JSON.parse(localStorage.getItem("missions"));
+
+        if (missions[i].done < missions[i].max) {
+            missions[i].done++;
+            points += 10;
+
+            log("+10 Missão: " + missions[i].txt);
+
+            localStorage.setItem("missions", JSON.stringify(missions));
+
+            update();
+            loadMissions();
+        } else {
+            alert("Já completou o máximo hoje 😄");
+        }
+
 
         // NOTIFICAÇÕES
         function notifyUser() {
@@ -325,6 +361,9 @@
                 localStorage.setItem("avatar", img);
             }
             reader.readAsDataURL(event.target.files[0]);
+
+            localStorage.setItem("avatar", img);
+            saveCloud();
         }
 
         // PWA INSTALL

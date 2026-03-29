@@ -154,7 +154,7 @@
     <div class="container">
         <h1>⚽ Missão Chuteira</h1>
 
-        <div id="version">Versão 8</div>
+        <div id="version">Versão 10</div>
 
         <button id="installBtn" style="display:none; background:#22c55e;">
             📲 Instalar App
@@ -306,21 +306,28 @@ text-align:center;
         function saveCloud() {
             let missions = JSON.parse(localStorage.getItem("missions"));
             let avatar = localStorage.getItem("avatar");
+            let logs = JSON.parse(localStorage.getItem("logs") || "[]");
 
             db.collection("usuarios").doc(name).set({
                 pontos: points,
                 missions: missions,
-                avatar: avatar
+                avatar: avatar,
+                logs: logs
             });
         }
 
         function loadCloud() {
-            db.collection("usuarios").doc(name).get().then(doc => {
-                if (doc.exists) {
 
+            
+            name = name.trim().toLowerCase();
+            localStorage.setItem("name", name);
+
+            db.collection("usuarios").doc(name).get().then(doc => {
+
+                if (doc.exists) {
                     let data = doc.data();
 
-                    points = data.pontos || 0;
+                    points = data.pontos ?? 800;
 
                     if (data.missions) {
                         localStorage.setItem("missions", JSON.stringify(data.missions));
@@ -331,9 +338,21 @@ text-align:center;
                         document.getElementById("avatar").src = data.avatar;
                     }
 
-                    update();
-                    loadMissions();
+                    if (data.logs) {
+                        localStorage.setItem("logs", JSON.stringify(data.logs));
+                    }
+
+                } else {
+                    localStorage.setItem("logs", JSON.stringify([]));
+                    saveCloud();
                 }
+
+                loadMissions();
+                renderLogs(); 
+                update();
+
+            }).catch(err => {
+                console.error("Erro ao carregar do Firebase:", err);
             });
         }
 
@@ -393,7 +412,25 @@ text-align:center;
         function log(txt) {
             let box = document.getElementById("log");
             let time = new Date().toLocaleTimeString();
-            box.innerHTML = "[" + time + "] " + txt + "<br>" + box.innerHTML;
+
+            let newLog = "[" + time + "] " + txt;
+
+            let logs = JSON.parse(localStorage.getItem("logs") || "[]");
+
+            logs.unshift(newLog);
+
+            logs = logs.slice(0, 50);
+
+            localStorage.setItem("logs", JSON.stringify(logs));
+
+            renderLogs();
+        }
+
+        function renderLogs() {
+            let box = document.getElementById("log");
+            let logs = JSON.parse(localStorage.getItem("logs") || "[]");
+
+            box.innerHTML = logs.join("<br>");
         }
 
         // LOJA
@@ -635,11 +672,9 @@ text-align:center;
             }
 
             requestNotification();
-            loadCloud();
-            loadMissions();
-            update();
 
-            setInterval(notifyUser, 1000 * 60 * 60 * 24);
+            loadCloud();
+
         }
 
         function openAvatarModal() {
@@ -656,7 +691,7 @@ text-align:center;
 
         // SERVICE WORKER
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('service-worker.js?v=8');
+            navigator.serviceWorker.register('service-worker.js?v=10');
         }
     </script>
 </body>

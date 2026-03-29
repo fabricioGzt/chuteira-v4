@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#22c55e">
+    <meta charset="UTF-8">
+    <title>Missão Chuteira V4</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #020617;
+            color: white;
+            text-align: center;
+        }
+
+        .container {
+            width: 360px;
+            margin: auto;
+            margin-top: 10px;
+            padding: 15px;
+            border-radius: 15px;
+            background: #0f172a;
+            border: 2px solid #22c55e;
+        }
+
+        h1 {
+            color: #22c55e;
+        }
+
+        .bar {
+            height: 20px;
+            background: #1e293b;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #22c55e, #4ade80);
+        }
+
+        button {
+            padding: 8px;
+            margin: 4px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .add {
+            background: #22c55e;
+        }
+
+        .remove {
+            background: #ef4444;
+        }
+
+        .shop {
+            background: #020617;
+            padding: 10px;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+
+        .log {
+            text-align: left;
+            max-height: 120px;
+            overflow-y: auto;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        .mission {
+            background: #1e293b;
+            padding: 8px;
+            border-radius: 8px;
+            margin: 5px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>⚽ Missão Chuteira</h1>
+
+        <input type="file" accept="image/*" onchange="loadAvatar(event)">
+        <br><br>
+        <img id="avatar" width="80" style="border-radius:50%">
+        <h3 id="name"></h3>
+        <div id="rank"></div>
+        <h2 id="points"></h2>
+
+        <div class="bar">
+            <div class="fill" id="bar"></div>
+        </div>
+
+        <h3>🎯 Ações</h3>
+        <button onclick="admin()">⚙️</button>
+        <button class="add" onclick="gain(5,'Tarefa')">+5</button>
+        <button class="add" onclick="gain(10,'Controle')">+10</button>
+        <button class="remove" onclick="lose(10,'Respondeu mal')">-10</button>
+
+        <h3>📅 Missões do dia</h3>
+        <div id="missions"></div>
+
+        <h3>🛒 Loja</h3>
+        <div class="shop">
+            <button onclick="buy(50,'Doce')">🍬 Doce (50)</button>
+            <button onclick="buy(100,'Filme')">🎬 Filme (100)</button>
+            <button onclick="buy(200,'Jogo')">🎮 Jogo (200)</button>
+        </div>
+
+        <div class="log" id="log"></div>
+    </div>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js"></script>
+
+    <script>
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAWgsHnLAUopuadUDmCVqjQEPwace0fiSU",
+            authDomain: "chuteira-v4.firebaseapp.com",
+            projectId: "chuteira-v4",
+            storageBucket: "chuteira-v4.firebasestorage.app",
+            messagingSenderId: "872183778044",
+            appId: "1:872183778044:web:00df16aea5039b31a1a579",
+            measurementId: "G-B0E883LG7H"
+        };
+
+        function saveCloud() {
+            db.collection("usuarios").doc(name).set({
+                pontos: points
+            });
+        }
+
+        function loadCloud() {
+            db.collection("usuarios").doc(name).get().then(doc => {
+                if (doc.exists) {
+                    points = doc.data().pontos;
+                    update();
+                }
+            });
+        }
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let adminUnlocked = false;
+
+        function admin() {
+            let senha = prompt("Senha do Tio:");
+            if (senha === "382648") {
+                adminUnlocked = !adminUnlocked;
+
+                alert(adminUnlocked
+                    ? "Modo pai ATIVADO 🔓"
+                    : "Modo pai DESATIVADO 🔒"
+                );
+            }
+        }
+
+        let name = localStorage.getItem("name") || prompt("Nome do jogador:");
+        localStorage.setItem("name", name);
+
+        let points = parseInt(localStorage.getItem("points") || 800);
+        const goal = 1000;
+
+        function rank() {
+            if (points < 850) return "Bronze";
+            if (points < 900) return "Prata";
+            if (points < 950) return "Ouro";
+            if (points < 1000) return "Elite";
+            return "🏆 Campeão";
+        }
+
+        function update() {
+
+            document.getElementById("name").innerText = "Jogador: " + name;
+            document.getElementById("points").innerText = points + " XP";
+            document.getElementById("rank").innerText = "Liga: " + rank();
+
+            let percent = (points / goal) * 100;
+            document.getElementById("bar").style.width = percent + "%";
+
+            localStorage.setItem("points", points);
+
+
+            if (points >= goal && !localStorage.getItem("won")) {
+                alert("🏆 Você ganhou a chuteira!");
+                localStorage.setItem("won", "true");
+            }
+
+            saveCloud();
+        }
+        function gain(v, t) {
+            if (!adminUnlocked) return alert("Aguardando liberação do Tio 👨‍👦");
+
+            points += v;
+            log("+" + v + " " + t);
+            update();
+        }
+        function lose(v, t) {
+            if (!adminUnlocked) return alert("Aguardando liberação do Tio 👨‍👦");
+
+            points -= v;
+            log("-" + v + " " + t);
+            update();
+        }
+
+        function log(txt) {
+            let box = document.getElementById("log");
+            let time = new Date().toLocaleTimeString();
+            box.innerHTML = "[" + time + "] " + txt + "<br>" + box.innerHTML;
+        }
+
+        function buy(cost, item) {
+            if (points >= cost) {
+                points -= cost;
+                log("Comprou: " + item);
+                update();
+
+                notifyReward(item);
+
+            } else {
+                alert("Pontos insuficientes!");
+            }
+        }
+
+        // MISSÕES DIÁRIAS
+        function loadMissions() {
+            let today = new Date().toDateString();
+            let saved = localStorage.getItem("missionDate");
+
+            if (saved !== today) {
+                localStorage.setItem("missionDate", today);
+                localStorage.setItem("missions", JSON.stringify([
+                    { txt: "🪥 Escovar os dentes", done: false },
+                    { txt: "🚿 Tomar banho", done: false },
+                    { txt: "🛏️ Arrumar a cama", done: false },
+                    { txt: "📚 Fazer tarefa", done: false },
+                    { txt: "🙂 Ser educado", done: false }
+                ]));
+            }
+
+            let missions = JSON.parse(localStorage.getItem("missions"));
+            let html = "";
+
+            missions.forEach((m, i) => {
+                html += `<div class="mission">
+            ${m.txt} 
+            <button onclick="completeMission(${i})">✔</button>
+        </div>`;
+            });
+
+            document.getElementById("missions").innerHTML = html;
+        }
+
+        function completeMission(i) {
+            let missions = JSON.parse(localStorage.getItem("missions"));
+            if (!missions[i].done) {
+                missions[i].done = true;
+                points += 10;
+                log("+10 Missão: " + missions[i].txt);
+                localStorage.setItem("missions", JSON.stringify(missions));
+                update();
+                loadMissions();
+            }
+        }
+
+        function notifyUser() {
+            if (Notification.permission === "granted") {
+                new Notification("Missão do dia!", {
+                    body: "Hora de completar suas tarefas 💪"
+                });
+            }
+        }
+
+        function requestNotification() {
+            if ("Notification" in window) {
+                Notification.requestPermission();
+            }
+        }
+
+        function notifyReward(item) {
+            if (Notification.permission === "granted") {
+                new Notification("Pedido de recompensa 🍬", {
+                    body: name + " quer: " + item
+                });
+            }
+        }
+
+        function loadAvatar(event) {
+            let reader = new FileReader();
+            reader.onload = function () {
+                let img = reader.result;
+                document.getElementById("avatar").src = img;
+                localStorage.setItem("avatar", img);
+            }
+            reader.readAsDataURL(event.target.files[0]);
+        }
+
+        window.onload = function () {
+            let avatar = localStorage.getItem("avatar");
+            if (avatar) {
+                document.getElementById("avatar").src = avatar;
+            }
+        }
+
+        requestNotification();
+        setInterval(notifyUser, 1000 * 60 * 60 * 24);
+
+
+        loadMissions();
+        update();
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js');
+        }
+    </script>
+</body>
+
+</html>

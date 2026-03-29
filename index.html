@@ -312,23 +312,7 @@
                 saveCloud();
             }
         }
-        let missions = JSON.parse(localStorage.getItem("missions"));
-
-        if (missions[i].done < missions[i].max) {
-            missions[i].done++;
-            points += 10;
-
-            log("+10 Missão: " + missions[i].txt);
-
-            localStorage.setItem("missions", JSON.stringify(missions));
-
-            update();
-            loadMissions();
-        } else {
-            alert("Já completou o máximo hoje 😄");
-        }
-
-
+    
         // NOTIFICAÇÕES
         function notifyUser() {
             if (Notification.permission === "granted") {

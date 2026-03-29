@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#22c55e">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Missão Chuteira V4</title>
+    <title>Missão Chuteira</title>
 
     <style>
         body {
@@ -14,6 +14,13 @@
             background: #020617;
             color: white;
             text-align: center;
+        }
+
+        #version {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: -10px;
+            margin-bottom: 10px;
         }
 
         .container {
@@ -123,13 +130,15 @@
     <div class="container">
         <h1>⚽ Missão Chuteira</h1>
 
+        <div id="version">v6</div>
+
         <button id="installBtn" style="display:none; background:#22c55e;">
             📲 Instalar App
         </button>
 
-        <input type="file" accept="image/*" onchange="loadAvatar(event)">
+        <input id="fileInput" type="file" accept="image/*" onchange="loadAvatar(event)" style="display:none;">
         <br><br>
-        <img id="avatar" width="80" style="border-radius:50%">
+        <img id="avatar" width="100" style="border-radius:50%; cursor:pointer;" onclick="openAvatarModal()">
         <h3 id="name"></h3>
         <div id="rank"></div>
         <h2 id="points"></h2>
@@ -187,6 +196,32 @@
 
         <h1>⚽ GOL DO DIA!</h1>
         <h2>🔥 Bora pra cima!</h2>
+
+    </div>
+
+    <div id="avatarModal" style="
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.9);
+z-index:9999;
+justify-content:center;
+align-items:center;
+flex-direction:column;
+">
+
+        <img id="avatarBig" style="width:200px; border-radius:50%; margin-bottom:20px;">
+
+        <button onclick="document.getElementById('fileInput').click()">
+            🔄 Trocar imagem
+        </button>
+
+        <button onclick="closeAvatarModal()" style="margin-top:10px; background:#ef4444;">
+            ❌ Fechar
+        </button>
 
     </div>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
@@ -480,9 +515,12 @@
                 let img = reader.result;
 
                 document.getElementById("avatar").src = img;
+                document.getElementById("avatarBig").src = img;
+
                 localStorage.setItem("avatar", img);
 
                 saveCloud();
+                closeAvatarModal();
             }
 
             reader.readAsDataURL(event.target.files[0]);
@@ -531,6 +569,18 @@
             update();
 
             setInterval(notifyUser, 1000 * 60 * 60 * 24);
+        }
+
+        function openAvatarModal() {
+            let img = localStorage.getItem("avatar");
+            if (img) {
+                document.getElementById("avatarBig").src = img;
+            }
+            document.getElementById("avatarModal").style.display = "flex";
+        }
+
+        function closeAvatarModal() {
+            document.getElementById("avatarModal").style.display = "none";
         }
 
         // SERVICE WORKER

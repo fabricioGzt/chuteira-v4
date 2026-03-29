@@ -160,7 +160,7 @@
             📲 Instalar App
         </button>
 
-        <input id="fileInput" type="file" accept="image/*" onchange="loadAvatar(event)">
+        <input id="fileInput" type="file" accept="image/*" onchange="loadAvatar(event)" style="display:block;">
         <br><br>
         <img id="avatar" width="100" style="border-radius:50%; cursor:pointer;" onclick="openAvatarModal()">
         <h3 id="name"></h3>
@@ -691,7 +691,7 @@ text-align:center;
 
         // SERVICE WORKER
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('service-worker.js?v=10');
+            navigator.serviceWorker.register('service-worker.js?v=11');
         }
     </script>
 </body>

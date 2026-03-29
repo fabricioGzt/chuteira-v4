@@ -132,23 +132,35 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
     <script>
-
         let adminUnlocked = false;
 
+        // FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyAWgsHnLAUopuadUDmCVqjQEPwace0fiSU",
             authDomain: "chuteira-v4.firebaseapp.com",
             projectId: "chuteira-v4",
             storageBucket: "chuteira-v4.firebasestorage.app",
             messagingSenderId: "872183778044",
-            appId: "1:872183778044:web:00df16aea5039b31a1a579",
-            measurementId: "G-B0E883LG7H"
+            appId: "1:872183778044:web:00df16aea5039b31a1a579"
         };
 
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // USUÁRIO
+        let name = localStorage.getItem("name");
+
+        if (!name || name === "null") {
+            name = prompt("Nome do jogador:");
+            localStorage.setItem("name", name);
+        }
+
+        let points = parseInt(localStorage.getItem("points") || 800);
+        const goal = 1000;
+
+        // CLOUD
         function saveCloud() {
-            db.collection("usuarios").doc(name).set({
-                pontos: points
-            });
+            db.collection("usuarios").doc(name).set({ pontos: points });
         }
 
         function loadCloud() {
@@ -160,31 +172,16 @@
             });
         }
 
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-
+        // ADMIN
         function admin() {
             let senha = prompt("Senha do Tio:");
             if (senha === "382648") {
                 adminUnlocked = !adminUnlocked;
-
-                alert(adminUnlocked
-                    ? "Modo pai ATIVADO 🔓"
-                    : "Modo pai DESATIVADO 🔒"
-                );
+                alert(adminUnlocked ? "Modo pai ATIVADO 🔓" : "Modo pai DESATIVADO 🔒");
             }
         }
 
-        let name = localStorage.getItem("name");
-
-        if (!name || name === "null") {
-            name = prompt("Nome do jogador:");
-            localStorage.setItem("name", name);
-        }
-
-        let points = parseInt(localStorage.getItem("points") || 800);
-        const goal = 1000;
-
+        // RANK
         function rank() {
             if (points < 850) return "Bronze";
             if (points < 900) return "Prata";
@@ -193,8 +190,8 @@
             return "🏆 Campeão";
         }
 
+        // UPDATE UI
         function update() {
-
             document.getElementById("name").innerText = "Jogador: " + name;
             document.getElementById("points").innerText = points + " XP";
             document.getElementById("rank").innerText = "Liga: " + rank();
@@ -204,7 +201,6 @@
 
             localStorage.setItem("points", points);
 
-
             if (points >= goal && !localStorage.getItem("won")) {
                 alert("🏆 Você ganhou a chuteira!");
                 localStorage.setItem("won", "true");
@@ -212,41 +208,42 @@
 
             saveCloud();
         }
+
+        // AÇÕES
         function gain(v, t) {
             if (!adminUnlocked) return alert("Aguardando liberação do Tio 👨‍👦");
-
             points += v;
             log("+" + v + " " + t);
             update();
         }
+
         function lose(v, t) {
             if (!adminUnlocked) return alert("Aguardando liberação do Tio 👨‍👦");
-
             points -= v;
             log("-" + v + " " + t);
             update();
         }
 
+        // LOG
         function log(txt) {
             let box = document.getElementById("log");
             let time = new Date().toLocaleTimeString();
             box.innerHTML = "[" + time + "] " + txt + "<br>" + box.innerHTML;
         }
 
+        // LOJA
         function buy(cost, item) {
             if (points >= cost) {
                 points -= cost;
                 log("Comprou: " + item);
                 update();
-
                 notifyReward(item);
-
             } else {
                 alert("Pontos insuficientes!");
             }
         }
 
-        // MISSÕES DIÁRIAS
+        // MISSÕES
         function loadMissions() {
             let today = new Date().toDateString();
             let saved = localStorage.getItem("missionDate");
@@ -268,10 +265,11 @@
             missions.forEach((m, i) => {
                 let doneClass = m.done >= m.max ? "done" : "";
 
-                html += `<div class="mission ${doneClass}">
-                ${m.txt} (${m.done}/${m.max})
-                <button onclick="completeMission(${i})">✔</button>
-                </div>`;
+                html += `
+        <div class="mission ${doneClass}">
+            ${m.txt} (${m.done}/${m.max})
+            <button onclick="completeMission(${i})">✔</button>
+        </div>`;
             });
 
             document.getElementById("missions").innerHTML = html;
@@ -294,28 +292,13 @@
                 alert("Já completou o máximo hoje 😄");
             }
         }
-        let missions = JSON.parse(localStorage.getItem("missions"));
-        if (!missions[i].done) {
-            missions[i].done = true;
-            points += 10;
-            log("+10 Missão: " + missions[i].txt);
-            localStorage.setItem("missions", JSON.stringify(missions));
-            update();
-            loadMissions();
-        }
 
-
+        // NOTIFICAÇÕES
         function notifyUser() {
             if (Notification.permission === "granted") {
                 new Notification("Missão do dia!", {
                     body: "Hora de completar suas tarefas 💪"
                 });
-            }
-        }
-
-        function requestNotification() {
-            if ("Notification" in window) {
-                Notification.requestPermission();
             }
         }
 
@@ -327,6 +310,13 @@
             }
         }
 
+        function requestNotification() {
+            if ("Notification" in window) {
+                Notification.requestPermission();
+            }
+        }
+
+        // AVATAR
         function loadAvatar(event) {
             let reader = new FileReader();
             reader.onload = function () {
@@ -337,61 +327,52 @@
             reader.readAsDataURL(event.target.files[0]);
         }
 
-        window.onload = function () {
-            let avatar = localStorage.getItem("avatar");
-            if (avatar) {
-                document.getElementById("avatar").src = avatar;
-            }
-        }
-
-        requestNotification();
-        setInterval(notifyUser, 1000 * 60 * 60 * 24);
-
-
-        loadMissions();
-        update();
-    </script>
-    <script>
+        // PWA INSTALL
         let deferredPrompt;
 
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-
             document.getElementById("installBtn").style.display = "block";
         });
 
         document.getElementById("installBtn").addEventListener("click", async () => {
             if (deferredPrompt) {
                 deferredPrompt.prompt();
-
-                const { outcome } = await deferredPrompt.userChoice;
-
-                if (outcome === 'accepted') {
-                    console.log("Usuário instalou 👍");
-                } else {
-                    console.log("Usuário cancelou ❌");
-                }
-
                 deferredPrompt = null;
             }
         });
 
+        // iOS
         function isIos() {
-            return /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+            return /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
         }
 
         function isInStandaloneMode() {
-            return ('standalone' in window.navigator) && window.navigator.standalone;
+            return ('standalone' in navigator) && navigator.standalone;
         }
 
+        // INIT (CORRETO)
         window.onload = function () {
-            if (isIos() && !isInStandaloneMode()) {
-                alert("Para instalar o app:\n1. Clique no botão compartilhar 📤\n2. 'Adicionar à Tela de Início'");
+
+            let avatar = localStorage.getItem("avatar");
+            if (avatar) {
+                document.getElementById("avatar").src = avatar;
             }
+
+            if (isIos() && !isInStandaloneMode()) {
+                alert("Para instalar o app:\n1. Compartilhar 📤\n2. 'Tela de Início'");
+            }
+
+            requestNotification();
+            loadCloud();
+            loadMissions();
+            update();
+
+            setInterval(notifyUser, 1000 * 60 * 60 * 24);
         }
-    </script>
-    <script>
+
+        // SERVICE WORKER
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('service-worker.js');
         }

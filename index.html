@@ -95,6 +95,10 @@
     <div class="container">
         <h1>⚽ Missão Chuteira</h1>
 
+        <button id="installBtn" style="display:none; background:#22c55e;">
+            📲 Instalar App
+        </button>
+
         <input type="file" accept="image/*" onchange="loadAvatar(event)">
         <br><br>
         <img id="avatar" width="80" style="border-radius:50%">
@@ -346,6 +350,46 @@
 
         loadMissions();
         update();
+    </script>
+    <script>
+        let deferredPrompt;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+
+            document.getElementById("installBtn").style.display = "block";
+        });
+
+        document.getElementById("installBtn").addEventListener("click", async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+
+                const { outcome } = await deferredPrompt.userChoice;
+
+                if (outcome === 'accepted') {
+                    console.log("Usuário instalou 👍");
+                } else {
+                    console.log("Usuário cancelou ❌");
+                }
+
+                deferredPrompt = null;
+            }
+        });
+
+        function isIos() {
+            return /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+        }
+
+        function isInStandaloneMode() {
+            return ('standalone' in window.navigator) && window.navigator.standalone;
+        }
+
+        window.onload = function () {
+            if (isIos() && !isInStandaloneMode()) {
+                alert("Para instalar o app:\n1. Clique no botão compartilhar 📤\n2. 'Adicionar à Tela de Início'");
+            }
+        }
     </script>
     <script>
         if ('serviceWorker' in navigator) {

@@ -312,7 +312,7 @@
                 saveCloud();
             }
         }
-    
+
         // NOTIFICAÇÕES
         function notifyUser() {
             if (Notification.permission === "granted") {
@@ -339,15 +339,17 @@
         // AVATAR
         function loadAvatar(event) {
             let reader = new FileReader();
+
             reader.onload = function () {
                 let img = reader.result;
+
                 document.getElementById("avatar").src = img;
                 localStorage.setItem("avatar", img);
-            }
-            reader.readAsDataURL(event.target.files[0]);
 
-            localStorage.setItem("avatar", img);
-            saveCloud();
+                saveCloud(); 
+            }
+
+            reader.readAsDataURL(event.target.files[0]);
         }
 
         // PWA INSTALL
@@ -397,7 +399,7 @@
 
         // SERVICE WORKER
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('service-worker.js');
+            navigator.serviceWorker.register('service-worker.js?v=3');
         }
     </script>
 </body>
